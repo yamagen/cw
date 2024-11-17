@@ -21,7 +21,7 @@ If no file is specified, read from standard input.
 
 ## Version
 
-cw version 0.0.0 Last change: 2024/11/18-08:19:04. Hilofumi Yamamoto
+cw version 0.0.0 Last change: 2024/11/18-08:20:29. Hilofumi Yamamoto
 
 ## Options
 
@@ -38,6 +38,6 @@ MIT License
 
 ## Author
 
-Hilo Yamamoto / Institute of Science Tokyo
+Hilofumi Yamamoto, Ph.D. / Institute of Science Tokyo
 
 ## Examples
