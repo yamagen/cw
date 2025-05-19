@@ -1,45 +1,46 @@
-# FastText PCA-based Semantic ID (FPS-ID): A Design Proposal for Meaning-Based Word Identification and Cooccurrence-Weighted Visualization
+# Frequency-based PCA Semantic ID (FPS-ID): A Lightweight Semantic Labeling System for Classical Japanese Corpora
 
 ## ✅ Objective
 
-The traditional `wlsp` (word labeling and semantic classification system) relied heavily on manual sense labeling and categorization, limiting its scalability and objectivity.
-This proposal introduces the **FPS-ID (FastText PCA-based Semantic ID)** system, which compresses fastText word vectors using PCA and expresses them as human-readable numerical IDs. This enables **hierarchical encoding of word meanings through digit precision**, and allows **automatic grouping of semantically similar words** for cooccurrence-based processing.
+Traditional systems like `wlsp` relied on manually crafted semantic labels and symbolic identifiers, which are unsustainable for scalable and structurally consistent analysis. In classical Japanese corpora (e.g., _Ise Monogatari_, _Tosa Nikki_, and _Kokin Wakashū_), the total number of words is too small for modern word embedding models like fastText to be effective.
+
+To solve this, we introduce **FPS-ID (Frequency-based PCA Semantic ID)**: a compact, interpretable semantic identifier generated from **cooccurrence-based word vectors** compressed via PCA. The digit precision of the resulting ID encodes semantic granularity, enabling human-readable, meaning-ordered labeling.
 
 ---
 
-## ✅ Overview of the Pipeline
+## ✅ Overall Workflow
 
 ```sh
 % fsp input.txt | cw -k "fps-id" -digit 6 | graphviz -Tsvg -o output.svg
 ```
 
-| Step       | Description                                                                                                                          |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `fsp`      | Extracts words from input text, applies FastText and PCA to assign FPS-IDs, and outputs one-word-per-line `streamtext.jsonl` format  |
-| `cw`       | Treats words as identical if their `fps-id` prefix (up to `-digit`) matches, and computes cooccurrence weights (tf × √(idf₁ × idf₂)) |
-| `graphviz` | Visualizes the cooccurrence network; semantic clusters become visually apparent                                                      |
+| Step       | Description                                                                                                                                                            |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fsp`      | Reads classical Japanese text line-by-line, constructs cooccurrence vectors per word, applies PCA, and outputs 1-word-per-line `streamtext.jsonl` with `fps-id` fields |
+| `cw`       | Groups words by the prefix of `fps-id` (as specified by `-digit`) and computes cooccurrence weight: `cw(t1, t2) = ctf × √(idf₁ × idf₂)`                                |
+| `graphviz` | Visualizes the weighted graph to reveal semantically coherent clusters                                                                                                 |
 
 ---
 
 ## ✅ FPS-ID Specification
 
-### Basic Structure:
+### Structure:
 
-- Input: FastText (300-dim word vectors)
-- Compression: PCA (typically to 2 dimensions)
-- Output format: `"fps-id": "23.61472983"` (floating-point style string)
+- Source: **Word cooccurrence matrix** derived from classical texts
+- Compression: PCA (typically 1D or 2D)
+- Output: Floating-point string such as `"fps-id": "23.614729"`
 
-### Interpretation by Digit Length:
+### Semantic Granularity by Digits:
 
-| Digits       | Interpretation                                   | Use Case                               |
-| ------------ | ------------------------------------------------ | -------------------------------------- |
-| `23`         | Semantic cluster (e.g. seasonal words)           | High-level classification or filtering |
-| `23.61`      | Similar word group (e.g. "spring" vs "autumn")   | Semantic organization                  |
-| `23.6147...` | Fine-grained word sense variation per occurrence | Word-sense disambiguation              |
+| Digits       | Meaning                                          | Use Case                                      |
+| ------------ | ------------------------------------------------ | --------------------------------------------- |
+| `23`         | Coarse semantic cluster (e.g., seasons, animals) | Filtering, high-level classification          |
+| `23.61`      | Synonym group (e.g., 春 vs 秋)                   | Grouped display, sorting                      |
+| `23.6147...` | Fine-grained contextual variants                 | Sense disambiguation, poetic nuance detection |
 
 ---
 
-## ✅ Example Entry from `streamtext.jsonl` (1 word per line)
+## ✅ Example Entry in `streamtext.jsonl`
 
 ```json
 {
@@ -54,55 +55,54 @@ This proposal introduces the **FPS-ID (FastText PCA-based Semantic ID)** system,
 
 ---
 
-## ✅ Extension of `cw` (Cooccurrence Pattern Weighting Program)
+## ✅ cw Integration (Cooccurrence Weighting)
 
-### Functional Overview
+### Functionality
 
 - Input: `streamtext.jsonl`
-- Options:
-
-  - `-k fps-id` : specify key as `fps-id`
-  - `-digit 6` : treat the first 6 digits of `fps-id` as the comparison unit
-
+- Key option: `-k fps-id`
+- Digit precision: `-digit 6` → groups words by the first 6 digits of `fps-id`
 - Output: `fps-id1 fps-id2 weight`
 
-### Weight Computation:
+### Weight Formula
 
 ```math
-cw(t1, t2) = ctf × √(idf_1 × idf_2)
+cw(t1, t2) = ctf × √(idf₁ × idf₂)
 ```
 
 ---
 
-## ✅ Advantages of This Approach
+## ✅ Advantages
 
-### Structural
+### For Classical Corpora
 
-- ✅ Enables meaning-based word identification
-- ✅ Abstraction level can be adjusted by simply truncating digits
-- ✅ Human-readable and sortable semantic IDs
+- ✅ No need for large training data or fastText-style embeddings
+- ✅ Entirely self-contained: uses the corpus itself as semantic evidence
+- ✅ Works with 10k–50k token corpora (Ise, Tosa, Kokin, etc.)
 
-### Computational
+### Interpretability
 
-- ✅ `cw` auto-selects only significant cooccurrences
-- ✅ Unifies statistical weighting and semantic visualization
+- ✅ Human-readable, sortable semantic IDs
+- ✅ Control abstraction via digit truncation
+- ✅ Transparent structure: no hidden neural layers
 
-### Output / Application
+### Visual Semantics
 
-- ✅ `graphviz` visualizes semantic distribution maps
-- ✅ Applicable to semantic clustering, synonym extraction, and word sense disambiguation
-
----
-
-## ✅ Future Outlook
-
-- Develop `fpsid2text.tsv` (reverse lookup table from FPS-ID to word)
-- Build `fpsid-cluster-browser` (GUI to explore semantic space visually)
-- Explore integration with other vector models (e.g. BERT-based embeddings)
+- ✅ Graph structure reveals poetic or rhetorical groupings
+- ✅ Use of `graphviz` allows immediate inspection of results
 
 ---
 
-> **FPS-ID = FastText PCA-based Semantic ID**
-> A novel word ID system that transforms semantic distribution into a numerical space, where digit precision encodes abstraction level.
+## ✅ Future Directions
+
+- Develop `kfps` toolkit: word cooccurrence → PCA → fps-id encoder
+- Support inverse mapping table (`fpsid2text.tsv`)
+- Build `fpsid-cluster-browser`: a GUI for visually navigating semantic clusters
+- Compare with handcrafted `wlsp` labels for interpretive studies
+
+---
+
+> **FPS-ID = Frequency-based PCA Semantic ID**
+> A lightweight, interpretable, corpus-driven semantic ID system ideal for small-scale poetic and classical language analysis.
 
 ---
